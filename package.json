@@ -1,7 +1,7 @@
 {
   "name": "dsh-pet-component",
   "type": "module",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "packageManager": "pnpm@11.25.0",
   "description": "把 dsh-pet 与 Codex Pet 两套桌宠协议收进一个 <Pet> React 组件",
   "author": "Hairyf <wwu710632@gmail.com>",
