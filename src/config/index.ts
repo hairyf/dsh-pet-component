@@ -131,15 +131,22 @@ export interface CodexResolvedFrame {
   row: number
   /** 帧数（列数） */
   frames: number
-  /** 每帧时长 ms */
+  /** 每帧时长 ms（`durations` 缺项时的回落值） */
   interval: number
+  /** 逐帧时长 ms（可选；第 N 项 = 第 N 帧停留时长，优先级高于 `interval`） */
+  durations?: readonly number[]
   /** 是否循环 */
   loop: boolean
 }
 
-/** Codex 图集内置动作表（行号对齐 Codex 契约；`source/codex-to-dsh-pet` 的 `ANIMATIONS`）。 */
+/**
+ * Codex 图集内置动作表（行号对齐 Codex 契约；`source/codex-to-dsh-pet` 的 `ANIMATIONS`）。
+ *
+ * idle 的逐帧时长对齐参考实现 `dsh-plugin-codex-pets` 的 `IDLE_DURATIONS`
+ *（首/末帧为长停留的「呼吸」帧）——匀速 160ms 会让 idle 看起来切帧过快、从不停顿。
+ */
 export const CODEX_ACTIONS: Record<string, CodexResolvedFrame> = {
-  idle: { row: 0, frames: 6, interval: 160, loop: true },
+  idle: { row: 0, frames: 6, interval: 160, durations: [280, 110, 110, 140, 140, 320], loop: true },
   movingRight: { row: 1, frames: 8, interval: 120, loop: true },
   movingLeft: { row: 2, frames: 8, interval: 120, loop: true },
   waving: { row: 3, frames: 4, interval: 140, loop: false },
@@ -622,7 +629,8 @@ export function resolveCodexFrame(
   const row = Number.isFinite(spec.row) ? Math.max(0, Math.floor(spec.row)) : base.row
   const frames = spec.frames !== undefined && spec.frames > 0 ? Math.floor(spec.frames) : base.frames
   const interval = spec.interval !== undefined && spec.interval > 0 ? spec.interval : base.interval
-  return { row, frames, interval, loop: spec.loop ?? isLoopingMotion(motion) }
+  const durations = spec.durations ?? base.durations
+  return { row, frames, interval, durations, loop: spec.loop ?? isLoopingMotion(motion) }
 }
 
 /**

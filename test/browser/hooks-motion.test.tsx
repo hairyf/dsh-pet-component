@@ -134,6 +134,42 @@ describe('useSpritePlayer', () => {
     expect(position(element).x).toBe(0)
   })
 
+  it('逐帧时长 durations 优先于 interval，缺项回落 interval', async () => {
+    const { container } = await render(
+      <SpriteHarness frame={{ row: 0, frames: 3, interval: 100, durations: [250, 50, 0], loop: true }} />,
+    )
+    const element = container.querySelector<HTMLElement>('[data-testid="sprite"]') as HTMLElement
+    expect(position(element).x).toBe(0)
+
+    vi.advanceTimersByTime(250) // 第 0 帧停留 250ms
+    expect(position(element).x).toBeCloseTo(X_PER_COLUMN, 3)
+
+    vi.advanceTimersByTime(50) // 第 1 帧只停 50ms
+    expect(position(element).x).toBeCloseTo(X_PER_COLUMN * 2, 3)
+
+    vi.advanceTimersByTime(99) // 第 2 帧时长 0 非法 → 回落 interval=100
+    expect(position(element).x).toBeCloseTo(X_PER_COLUMN * 2, 3)
+    vi.advanceTimersByTime(1)
+    expect(position(element).x).toBe(0) // 循环回第 0 帧
+  })
+
+  it('一次性动作提供 durations 时：末帧时长即定格停留，不再额外多停', async () => {
+    const onFinish = vi.fn()
+    const { container } = await render(
+      <SpriteHarness frame={{ row: 2, frames: 2, interval: 100, durations: [100, 300], loop: false }} onFinish={onFinish} />,
+    )
+    const element = container.querySelector<HTMLElement>('[data-testid="sprite"]') as HTMLElement
+
+    vi.advanceTimersByTime(100) // 画第 1 帧（末帧）
+    expect(position(element).x).toBeCloseTo(X_PER_COLUMN, 3)
+    expect(onFinish).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(299) // 末帧按 durations 定格 300ms
+    expect(onFinish).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(1)
+    expect(onFinish).toHaveBeenCalledTimes(1)
+  })
+
   it('一次性动作停在末帧一个 interval 后收尾，且只回调一次', async () => {
     const onFinish = vi.fn()
     const { container } = await render(

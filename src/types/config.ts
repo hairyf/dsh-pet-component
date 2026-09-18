@@ -178,6 +178,12 @@ export interface CodexPetFrameSpec {
   frames?: number
   /** 每帧时长 ms，缺省 140 */
   interval?: number
+  /**
+   * 逐帧时长 ms（可选，优先级高于 `interval`）：第 N 项 = 第 N 帧的停留时长。
+   * 缺项/非法项回落 `interval`。用于「首末帧长停留」这类非匀速节奏
+   * （对齐参考实现 `dsh-plugin-codex-pets` 的 `IDLE_DURATIONS`）。
+   */
+  durations?: number[]
   /** 是否循环，缺省按 Motion 语义 */
   loop?: boolean
 }

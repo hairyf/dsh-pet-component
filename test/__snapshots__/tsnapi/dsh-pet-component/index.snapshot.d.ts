@@ -25,6 +25,7 @@ export interface CodexPetFrameSpec {
   row: number;
   frames?: number;
   interval?: number;
+  durations?: number[];
   loop?: boolean;
 }
 export interface DshPetAnimations {
